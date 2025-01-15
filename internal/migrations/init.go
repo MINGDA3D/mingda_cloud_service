@@ -12,5 +12,7 @@ func AutoMigrate(db *gorm.DB) error {
 		&model.DeviceToken{},
 		&model.DeviceInfo{},
 		&model.SoftwareVersions{},
+		&model.DeviceStatus{},
+		&model.DeviceOnline{},
 	)
 } 

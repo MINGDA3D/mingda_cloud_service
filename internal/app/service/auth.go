@@ -11,6 +11,7 @@ import (
 	"mingda_cloud_service/internal/pkg/utils"
 	"mingda_cloud_service/internal/pkg/validator"
 	"github.com/gin-gonic/gin"
+	"context"
 )
 
 type AuthService struct {
@@ -140,4 +141,67 @@ func (s *AuthService) ValidateToken(tokenString string) (*mdmodel.Device, error)
 	}
 
 	return nil, errors.New(errors.ErrUnauthorized, "无效的访问令牌")
+}
+
+// RefreshToken 刷新访问令牌
+func (s *AuthService) RefreshToken(oldToken string) (string, error) {
+	// 解析旧token
+	claims, err := utils.ParseToken(oldToken, s.jwtSecret)
+	if err != nil {
+		return "", errors.New(errors.ErrUnauthorized, "invalid token")
+	}
+
+	// 检查token是否在黑名单中
+	if s.isTokenBlacklisted(oldToken) {
+		return "", errors.New(errors.ErrUnauthorized, "token has been revoked")
+	}
+
+	// 获取设备信息
+	var device mdmodel.Device
+	if err := database.DB.First(&device, claims.DeviceID).Error; err != nil {
+		return "", errors.New(errors.ErrDeviceNotFound, "device not found")
+	}
+
+	// 检查设备状态
+	if device.Status != 1 {
+		return "", errors.New(errors.ErrUnauthorized, "device is disabled")
+	}
+
+	// 生成新token
+	newToken, err := utils.GenerateToken(&device, s.jwtSecret, 24*time.Hour)
+	if err != nil {
+		return "", err
+	}
+
+	// 将旧token加入黑名单
+	if err := s.addToBlacklist(oldToken, claims.ExpiresAt); err != nil {
+		return "", err
+	}
+
+	// 保存新token记录
+	deviceToken := &mdmodel.DeviceToken{
+		DeviceID: device.ID,
+		Token:    newToken,
+		ExpireAt: time.Now().Add(24 * time.Hour),
+	}
+
+	if err := database.DB.Create(deviceToken).Error; err != nil {
+		return "", err
+	}
+
+	return newToken, nil
+}
+
+// isTokenBlacklisted 检查token是否在黑名单中
+func (s *AuthService) isTokenBlacklisted(token string) bool {
+	var exists bool
+	err := database.Redis.Get(context.Background(), fmt.Sprintf("token_blacklist:%s", token)).Err()
+	return err == nil && exists
+}
+
+// addToBlacklist 将token加入黑名单
+func (s *AuthService) addToBlacklist(token string, expireAt int64) error {
+	ctx := context.Background()
+	duration := time.Until(time.Unix(expireAt, 0))
+	return database.Redis.Set(ctx, fmt.Sprintf("token_blacklist:%s", token), true, duration).Err()
 } 

@@ -1,11 +1,12 @@
 package handler
 
 import (
-
 	"github.com/gin-gonic/gin"
 	"mingda_cloud_service/internal/app/service"
 	"mingda_cloud_service/internal/pkg/response"
 	"mingda_cloud_service/internal/pkg/validator"
+	"strings"
+	"errors"
 )
 
 type AuthHandler struct {
@@ -70,5 +71,32 @@ func (h *AuthHandler) Authenticate(c *gin.Context) {
 	response.Success(c, gin.H{
 		"token": token,
 		"device": device,
+	})
+}
+
+// RefreshToken 刷新访问令牌
+func (h *AuthHandler) RefreshToken(c *gin.Context) {
+	// 从请求头获取当前token
+	auth := c.GetHeader("Authorization")
+	if auth == "" {
+		response.Error(c, errors.New(errors.ErrUnauthorized, "missing authorization header"))
+		return
+	}
+
+	parts := strings.SplitN(auth, " ", 2)
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		response.Error(c, errors.New(errors.ErrUnauthorized, "invalid authorization format"))
+		return
+	}
+
+	// 刷新token
+	newToken, err := h.authService.RefreshToken(parts[1])
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+
+	response.Success(c, gin.H{
+		"token": newToken,
 	})
 } 

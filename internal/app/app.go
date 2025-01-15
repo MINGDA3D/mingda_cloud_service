@@ -81,6 +81,7 @@ func (a *App) registerRoutes() {
 		// 设备认证接口
 		v1.POST("/devices/register", authHandler.Register)
 		v1.POST("/devices/auth", authHandler.Authenticate)
+		v1.POST("/devices/refresh", authHandler.RefreshToken)
 
 		// 需要认证的接口
 		auth := v1.Group("/", middleware.AuthRequired())

@@ -12,6 +12,7 @@ import (
 	"mingda_cloud_service/internal/pkg/validator"
 	"github.com/gin-gonic/gin"
 	"context"
+	"mingda_cloud_service/internal/pkg/redis"
 )
 
 type AuthService struct {
@@ -194,8 +195,7 @@ func (s *AuthService) RefreshToken(oldToken string) (string, error) {
 
 // isTokenBlacklisted 检查token是否在黑名单中
 func (s *AuthService) isTokenBlacklisted(token string) bool {
-	var exists bool
-	err := database.Redis.Get(context.Background(), fmt.Sprintf("token_blacklist:%s", token)).Err()
+	exists, err := redis.Exists(context.Background(), fmt.Sprintf("token_blacklist:%s", token))
 	return err == nil && exists
 }
 
@@ -203,5 +203,5 @@ func (s *AuthService) isTokenBlacklisted(token string) bool {
 func (s *AuthService) addToBlacklist(token string, expireAt int64) error {
 	ctx := context.Background()
 	duration := time.Until(time.Unix(expireAt, 0))
-	return database.Redis.Set(ctx, fmt.Sprintf("token_blacklist:%s", token), true, duration).Err()
+	return redis.Set(ctx, fmt.Sprintf("token_blacklist:%s", token), true, duration)
 } 

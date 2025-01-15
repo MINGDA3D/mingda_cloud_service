@@ -1,13 +1,16 @@
 package service
 
 import (
+	"context"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"mingda_cloud_service/internal/app/model"
 	"mingda_cloud_service/internal/pkg/database"
+	"mingda_cloud_service/internal/pkg/redis"
 	"mingda_cloud_service/internal/pkg/utils"
+	"mingda_cloud_service/internal/pkg/config"
 )
 
 func TestAuthService_RefreshToken(t *testing.T) {
@@ -237,14 +240,17 @@ func setupTestEnv(t *testing.T) {
 	assert.NoError(t, err)
 
 	// 初始化测试Redis连接
-	err = database.InitRedis(database.RedisConfig{
-		Addr: "localhost:6379",
-		DB:   1, // 使用单独的数据库进行测试
+	err = redis.Init(config.RedisConfig{
+		Host:     "localhost",
+		Port:     6379,
+		DB:       1, // 使用单独的数据库进行测试
+		PoolSize: 10,
 	})
 	assert.NoError(t, err)
 
 	// 清理测试数据
 	database.DB.Exec("DELETE FROM md_devices")
 	database.DB.Exec("DELETE FROM md_device_tokens")
-	database.Redis.FlushDB()
+	ctx := context.Background()
+	redis.Client.FlushDB(ctx)
 } 

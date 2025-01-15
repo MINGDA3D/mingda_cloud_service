@@ -1,0 +1,37 @@
+server:
+  port: 8080
+  mode: debug  # debug/release
+  jwt_secret: "mingda3D250113PrintingCloudService2024"
+  aes_key: "MingDa3DPrinting2024CloudServiceKey32"
+
+database:
+  host: localhost
+  port: 3306
+  username: mingda  # 或者您创建的其他用户名
+  password: "mingda3D250113"    # 您的数据库密码
+  dbname: md_device_db
+  max_idle_conns: 10
+  max_open_conns: 100
+  conn_max_lifetime: 3600
+
+redis:
+  host: localhost
+  port: 6379
+  password: ""
+  db: 0
+  pool_size: 100
+
+rabbitmq:
+  host: localhost
+  port: 5672
+  username: guest
+  password: guest
+  vhost: /
+
+log:
+  level: debug
+  filename: logs/app.log
+  max_size: 100    # megabytes
+  max_age: 7       # days
+  max_backups: 30
+  compress: true

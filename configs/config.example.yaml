@@ -1,0 +1,37 @@
+server:
+  port: 8080
+  mode: debug  # debug/release
+  jwt_secret: "your-jwt-secret"
+  aes_key: "your-32-byte-aes-key-here"
+
+database:
+  host: localhost
+  port: 3306
+  username: root
+  password: your_password
+  dbname: md_device_db
+  max_idle_conns: 10
+  max_open_conns: 100
+  conn_max_lifetime: 3600
+
+redis:
+  host: localhost
+  port: 6379
+  password: ""
+  db: 0
+  pool_size: 100
+
+rabbitmq:
+  host: localhost
+  port: 5672
+  username: guest
+  password: guest
+  vhost: /
+
+log:
+  level: debug
+  filename: logs/app.log
+  max_size: 100    # megabytes
+  max_age: 7       # days
+  max_backups: 30
+  compress: true 

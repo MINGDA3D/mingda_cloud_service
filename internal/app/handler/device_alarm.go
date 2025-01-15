@@ -7,7 +7,6 @@ import (
 	"mingda_cloud_service/internal/pkg/middleware"
 	"mingda_cloud_service/internal/pkg/response"
 	"mingda_cloud_service/internal/pkg/errors"
-	"mingda_cloud_service/internal/pkg/constants"
 )
 
 // DeviceAlarmHandler 设备告警处理器
@@ -25,7 +24,7 @@ func NewDeviceAlarmHandler() *DeviceAlarmHandler {
 // ReportDeviceAlarm 上报设备告警
 func (h *DeviceAlarmHandler) ReportDeviceAlarm(c *gin.Context) {
 	// 从上下文获取设备SN
-	deviceSN := c.GetString(constants.ContextDeviceSN)
+	deviceSN := c.GetString(middleware.ContextDeviceSN)
 	if deviceSN == "" {
 		response.New(c).Error(errors.New(errors.ErrUnauthorized, "未授权的访问"))
 		return

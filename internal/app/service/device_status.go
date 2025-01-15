@@ -17,7 +17,7 @@ func NewDeviceStatusService() *DeviceStatusService {
 
 // DeviceStatusRequest 设备状态上报请求
 type DeviceStatusRequest struct {
-	DeviceSN       string  `json:"device_sn" binding:"required"`
+	DeviceSN       string  `json:"device_sn"`                              // 设备SN，以token中的值为准
 	StorageTotal   int64   `json:"storage_total" binding:"required"`
 	StorageUsed    int64   `json:"storage_used" binding:"required"`
 	StorageFree    int64   `json:"storage_free" binding:"required"`
@@ -29,7 +29,10 @@ type DeviceStatusRequest struct {
 }
 
 // ReportDeviceStatus 上报设备状态
-func (s *DeviceStatusService) ReportDeviceStatus(req *DeviceStatusRequest) error {
+func (s *DeviceStatusService) ReportDeviceStatus(tokenDeviceSN string, req *DeviceStatusRequest) error {
+	// 使用token中的设备SN
+	req.DeviceSN = tokenDeviceSN
+
 	// 开启事务
 	tx := database.DB.Begin()
 	defer func() {

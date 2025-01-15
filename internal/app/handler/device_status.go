@@ -33,10 +33,9 @@ func (h *DeviceStatusHandler) ReportDeviceStatus(c *gin.Context) {
 		response.Error(c, errors.New(errors.ErrUnauthorized, "未授权的访问"))
 		return
 	}
-	req.DeviceSN = deviceSN
 
 	// 处理设备状态上报
-	if err := h.statusService.ReportDeviceStatus(&req); err != nil {
+	if err := h.statusService.ReportDeviceStatus(deviceSN, &req); err != nil {
 		response.Error(c, err)
 		return
 	}

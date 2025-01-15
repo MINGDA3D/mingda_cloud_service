@@ -5,6 +5,7 @@ import (
 	"mingda_cloud_service/internal/app/model"
 	"mingda_cloud_service/internal/pkg/database"
 	"mingda_cloud_service/internal/pkg/errors"
+	"gorm.io/gorm"
 )
 
 // DeviceStatusService 设备状态服务
@@ -64,12 +65,15 @@ func (s *DeviceStatusService) ReportDeviceStatus(tokenDeviceSN string, req *Devi
 	var online model.DeviceOnline
 	err := tx.Where("device_sn = ?", req.DeviceSN).First(&online).Error
 	if err != nil {
-		if err == database.DB.Error {
+		if err == gorm.ErrRecordNotFound {
 			// 不存在记录，创建新记录
+			now := time.Now()
 			online = model.DeviceOnline{
 				DeviceSN:       req.DeviceSN,
 				IsOnline:       true,
-				LastReportTime: time.Now(),
+				LastReportTime: now,
+				CreateTime:     now,
+				UpdateTime:     now,
 			}
 			if err := tx.Create(&online).Error; err != nil {
 				tx.Rollback()
@@ -82,12 +86,13 @@ func (s *DeviceStatusService) ReportDeviceStatus(tokenDeviceSN string, req *Devi
 		}
 	} else {
 		// 更新在线状态
-		updates := map[string]interface{}{
+		now := time.Now()
+		if err := tx.Model(&online).Updates(map[string]interface{}{
 			"is_online":        true,
-			"last_report_time": time.Now(),
-			"offline_time":     nil,
-		}
-		if err := tx.Model(&online).Updates(updates).Error; err != nil {
+			"last_report_time": now,
+			"offline_time":     gorm.Expr("NULL"),
+			"update_time":      now,
+		}).Error; err != nil {
 			tx.Rollback()
 			return errors.NewWithError(errors.ErrDatabase, err)
 		}

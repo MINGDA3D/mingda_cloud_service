@@ -27,13 +27,13 @@ func (DeviceStatus) TableName() string {
 
 // DeviceOnline 设备在线状态
 type DeviceOnline struct {
-	ID             int64     `gorm:"primaryKey;column:id" json:"id"`
-	DeviceSN       string    `gorm:"column:device_sn" json:"device_sn"`
-	IsOnline       bool      `gorm:"column:is_online" json:"is_online"`
-	LastReportTime time.Time `gorm:"column:last_report_time" json:"last_report_time"`
-	OfflineTime    time.Time `gorm:"column:offline_time" json:"offline_time"`
-	CreateTime     time.Time `gorm:"column:create_time;autoCreateTime" json:"create_time"`
-	UpdateTime     time.Time `gorm:"column:update_time;autoUpdateTime" json:"update_time"`
+	ID             int64      `gorm:"primaryKey;column:id" json:"id"`
+	DeviceSN       string     `gorm:"column:device_sn" json:"device_sn"`
+	IsOnline       bool       `gorm:"column:is_online" json:"is_online"`
+	LastReportTime time.Time  `gorm:"column:last_report_time" json:"last_report_time"`
+	OfflineTime    *time.Time `gorm:"column:offline_time" json:"offline_time"`
+	CreateTime     time.Time  `gorm:"column:create_time;autoCreateTime" json:"create_time"`
+	UpdateTime     time.Time  `gorm:"column:update_time;autoUpdateTime" json:"update_time"`
 }
 
 // TableName 表名

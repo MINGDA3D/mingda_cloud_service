@@ -67,34 +67,9 @@ authenticate_device() {
 
 # 上报设备信息
 report_device_info() {
-    echo -e "\n${GREEN}3. 上报设备信息${NC}"
-    TOKEN=$(cat "$TOKEN_FILE")
-    
+    echo -e "\n3. 上报设备信息"
     echo -e "请求URL: ${BASE_URL}/device/info"
     echo -e "Authorization: Bearer ${TOKEN}"
-    
-    response=$(curl -v -s -X POST "${BASE_URL}/device/info" \
-        -H "Content-Type: application/json" \
-        -H "Authorization: Bearer ${TOKEN}" \
-        -d "{
-            \"device_info\": {
-                \"device_sn\": \"${DEVICE_SN}\",
-                \"device_model\": \"${DEVICE_MODEL}\",
-                \"hardware_version\": \"V1.0\"
-            },
-            \"software_versions\": {
-                \"klipper\": \"v0.11.0\",
-                \"klipper_screen\": \"v1.0.0\",
-                \"moonraker\": \"v0.8.0\",
-                \"mainsail\": \"v2.5.0\",
-                \"crowsnest\": \"v1.0.0\",
-                \"firmware\": {
-                    \"mainboard\": \"v1.2.3\",
-                    \"printhead\": \"v1.0.1\",
-                    \"leveling\": \"v1.1.0\"
-                }
-            }
-        }" 2>&1)
 
     echo -e "\n请求数据:"
     echo "{
@@ -117,28 +92,48 @@ report_device_info() {
         }
     }" | jq '.'
 
+    response=$(curl -v -s -X POST "${BASE_URL}/device/info" \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer ${TOKEN}" \
+        -d @- << EOF
+    {
+        "device_info": {
+            "device_sn": "${DEVICE_SN}",
+            "device_model": "${DEVICE_MODEL}",
+            "hardware_version": "V1.0"
+        },
+        "software_versions": {
+            "klipper": "v0.11.0",
+            "klipper_screen": "v1.0.0",
+            "moonraker": "v0.8.0",
+            "mainsail": "v2.5.0",
+            "crowsnest": "v1.0.0",
+            "firmware": {
+                "mainboard": "v1.2.3",
+                "printhead": "v1.0.1",
+                "leveling": "v1.1.0"
+            }
+        }
+    }
+EOF
+    )
+
     echo -e "\n完整响应内容:"
     echo "$response"
-    
-    # 提取JSON响应部分
+
+    # 提取 JSON 响应部分
     json_response=$(echo "$response" | grep -A 1000 "{" | grep -B 1000 "}")
     
-    if [ -n "$json_response" ]; then
-        echo -e "\nJSON响应解析:"
-        echo "$json_response" | jq '.'
-        
-        if [ "$(echo $json_response | jq -r '.code')" == "200" ]; then
-            echo -e "${GREEN}设备信息上报成功${NC}"
-        else
-            echo -e "${RED}设备信息上报失败${NC}"
-            echo -e "${RED}错误代码: $(echo $json_response | jq -r '.code')${NC}"
-            echo -e "${RED}错误信息: $(echo $json_response | jq -r '.message')${NC}"
-            echo -e "${RED}错误详情: $(echo $json_response | jq -r '.data // empty')${NC}"
-            exit 1
-        fi
+    # 检查响应状态
+    code=$(echo "$json_response" | jq -r '.code')
+    if [ "$code" = "200" ]; then
+        echo -e "\n${GREEN}设备信息上报成功${NC}"
     else
-        echo -e "${RED}响应不是有效的JSON格式${NC}"
-        exit 1
+        echo -e "\n${RED}设备信息上报失败${NC}"
+        echo -e "${RED}错误代码: $code${NC}"
+        echo -e "${RED}错误信息: $(echo "$json_response" | jq -r '.message')${NC}"
+        echo -e "${RED}错误详情: $(echo "$json_response" | jq -r '.data // empty')${NC}"
+        return 1
     fi
 }
 

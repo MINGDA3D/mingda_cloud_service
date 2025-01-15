@@ -113,22 +113,29 @@ func isValidVersion(version string) bool {
 
 // ValidateStruct 验证结构体
 func ValidateStruct(obj interface{}) error {
-	if err := validate.Struct(obj); err != nil {
-		if _, ok := err.(*validator.InvalidValidationError); ok {
-			return errors.New(errors.ErrInvalidParam, "参数验证错误")
-		}
-
-		for _, err := range err.(validator.ValidationErrors) {
-			return errors.New(errors.ErrInvalidParam, err.Error())
-		}
+	if obj == nil {
+		return errors.New(errors.ErrInvalidParams, "参数验证错误")
 	}
+
+	if err := validate.Struct(obj); err != nil {
+		return errors.New(errors.ErrInvalidParams, err.Error())
+	}
+
 	return nil
+}
+
+// ValidateJSON 验证JSON参数
+func ValidateJSON(c *gin.Context, obj interface{}) error {
+	if err := c.ShouldBindJSON(obj); err != nil {
+		return errors.New(errors.ErrInvalidParams, "参数绑定错误")
+	}
+	return ValidateStruct(obj)
 }
 
 // BindAndValid 绑定并验证请求参数
 func BindAndValid(c *gin.Context, obj interface{}) error {
 	if err := c.ShouldBind(obj); err != nil {
-		return errors.New(errors.ErrInvalidParam, "参数绑定错误")
+		return errors.New(errors.ErrInvalidParams, "参数绑定错误")
 	}
 
 	return ValidateStruct(obj)

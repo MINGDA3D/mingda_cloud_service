@@ -69,7 +69,7 @@ func (s *AuthService) RegisterDevice(sn, model string) (*mdmodel.Device, error) 
 	// 检查设备是否已存在
 	var device mdmodel.Device
 	if err := database.DB.Where("sn = ?", sn).First(&device).Error; err == nil {
-		return nil, errors.New(errors.ErrDeviceTypeInvalid, "设备已注册")
+		return nil, errors.New(errors.ErrDeviceDisabled, "设备已注册")
 	}
 
 	// 在生产环境下，应该从生产管理系统获取预置的密钥
@@ -139,7 +139,7 @@ func (s *AuthService) AuthenticateDevice(sn, sign string, timestamp int64) (*mdm
 	// 检查时间戳
 	if time.Now().Unix()-timestamp > 300 { // 5分钟内有效
 		tx.Rollback()
-		return nil, errors.New(errors.ErrExpired, "请求已过期")
+		return nil, errors.New(errors.ErrTokenExpired, "请求已过期")
 	}
 
 	// 验证签名

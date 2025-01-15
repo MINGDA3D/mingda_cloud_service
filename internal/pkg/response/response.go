@@ -34,7 +34,15 @@ func Error(c *gin.Context, err error) {
 	}
 
 	c.JSON(http.StatusInternalServerError, Response{
-		Code:    int(errors.ErrInternal),
+		Code:    int(errors.ErrUnknown),
 		Message: err.Error(),
+	})
+}
+
+// ErrorWithMsg 带消息的错误响应
+func ErrorWithMsg(c *gin.Context, msg string) {
+	c.JSON(http.StatusOK, Response{
+		Code:    int(errors.ErrUnknown),
+		Message: msg,
 	})
 } 

@@ -59,7 +59,7 @@ func (s *DeviceInfoService) ReportDeviceInfo(req *DeviceInfoRequest) error {
 		Assign(deviceInfo).
 		FirstOrCreate(deviceInfo).Error; err != nil {
 		tx.Rollback()
-		return errors.New(errors.ErrDatabase, "更新设备信息失败")
+		return errors.NewWithError(errors.ErrDatabase, err)
 	}
 
 	// 2. 记录软件版本信息
@@ -78,12 +78,12 @@ func (s *DeviceInfoService) ReportDeviceInfo(req *DeviceInfoRequest) error {
 
 	if err := tx.Create(softwareVersions).Error; err != nil {
 		tx.Rollback()
-		return errors.New(errors.ErrDatabase, "记录软件版本信息失败")
+		return errors.NewWithError(errors.ErrDatabase, err)
 	}
 
 	// 提交事务
 	if err := tx.Commit().Error; err != nil {
-		return errors.New(errors.ErrDatabase, "提交事务失败")
+		return errors.NewWithError(errors.ErrDatabase, err)
 	}
 
 	return nil

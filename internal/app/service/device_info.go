@@ -5,6 +5,7 @@ import (
 	"mingda_cloud_service/internal/app/model"
 	"mingda_cloud_service/internal/pkg/database"
 	"mingda_cloud_service/internal/pkg/errors"
+	"gorm.io/gorm"
 )
 
 // DeviceInfoService 设备信息服务
@@ -80,7 +81,7 @@ func (s *DeviceInfoService) ReportDeviceInfo(req *DeviceInfoRequest) error {
 	var existingVersions model.SoftwareVersions
 	err := tx.Where("device_sn = ?", softwareVersions.DeviceSN).First(&existingVersions).Error
 	if err != nil {
-		if database.DB.Error.Error() == "record not found" {
+		if err == gorm.ErrRecordNotFound {
 			// 不存在记录，直接插入
 			if err := tx.Create(softwareVersions).Error; err != nil {
 				tx.Rollback()

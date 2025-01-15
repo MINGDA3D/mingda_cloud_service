@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"mingda_cloud_service/internal/app/model"
 	"mingda_cloud_service/internal/pkg/database"
+	"mingda_cloud_service/internal/pkg/utils"
 )
 
 func TestAuthService_RefreshToken(t *testing.T) {
@@ -122,6 +123,108 @@ func TestAuthService_RefreshToken(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAuthService_TokenFlow(t *testing.T) {
+	// 初始化测试环境
+	setupTestEnv(t)
+
+	// 创建测试设备
+	device := &model.Device{
+		SN:          "M1A2401A0100001",
+		DeviceModel: "MD-400D",
+		Secret:      "test_device_secret",
+		Status:      1,
+		LastOnline:  time.Now(),
+	}
+	database.DB.Create(device)
+
+	t.Run("完整token流程测试", func(t *testing.T) {
+		authService := NewAuthService("test_jwt_secret", "test_aes_key")
+
+		// 1. 设备认证
+		timestamp := time.Now().Unix()
+		sign := utils.GenerateSign(device.SN, device.Secret, timestamp)
+		authedDevice, err := authService.AuthenticateDevice(device.SN, sign, timestamp)
+		assert.NoError(t, err)
+		assert.NotNil(t, authedDevice)
+		assert.Equal(t, device.SN, authedDevice.SN)
+
+		// 2. 生成token
+		token, err := authService.GenerateToken(authedDevice)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, token)
+
+		// 3. 验证token
+		claims, err := utils.ParseToken(token, "test_jwt_secret")
+		assert.NoError(t, err)
+		assert.NotNil(t, claims)
+		assert.Equal(t, device.SN, claims.DeviceSN)
+
+		// 4. 使用token访问受保护的资源
+		validatedDevice, err := authService.ValidateToken(token)
+		assert.NoError(t, err)
+		assert.NotNil(t, validatedDevice)
+		assert.Equal(t, device.ID, validatedDevice.ID)
+
+		// 5. 检查设备token记录
+		var deviceToken model.DeviceToken
+		err = database.DB.Where("device_id = ?", device.ID).First(&deviceToken).Error
+		assert.NoError(t, err)
+		assert.Equal(t, token, deviceToken.Token)
+		assert.True(t, deviceToken.ExpireAt.After(time.Now()))
+	})
+
+	t.Run("异常场景测试", func(t *testing.T) {
+		authService := NewAuthService("test_jwt_secret", "test_aes_key")
+
+		// 1. 使用错误的签名
+		timestamp := time.Now().Unix()
+		wrongSign := "wrong_sign"
+		_, err := authService.AuthenticateDevice(device.SN, wrongSign, timestamp)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "签名验证失败")
+
+		// 2. 使用过期的时间戳
+		expiredTimestamp := time.Now().Add(-10 * time.Minute).Unix()
+		sign := utils.GenerateSign(device.SN, device.Secret, expiredTimestamp)
+		_, err = authService.AuthenticateDevice(device.SN, sign, expiredTimestamp)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "请求已过期")
+
+		// 3. 使用无效的token
+		invalidToken := "invalid.token.string"
+		_, err = authService.ValidateToken(invalidToken)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "无效的访问令牌")
+
+		// 4. 设备被禁用后使用token
+		// 先获取有效token
+		validToken, _ := authService.GenerateToken(device)
+		// 禁用设备
+		database.DB.Model(device).Update("status", 0)
+		_, err = authService.ValidateToken(validToken)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "设备不可用")
+	})
+}
+
+// 添加辅助函数用于生成签名
+func TestAuthService_GenerateSign(t *testing.T) {
+	sn := "M1A2401A0100001"
+	secret := "test_secret"
+	timestamp := time.Now().Unix()
+
+	sign := utils.GenerateSign(sn, secret, timestamp)
+	assert.NotEmpty(t, sign)
+
+	// 验证相同输入生成相同签名
+	sign2 := utils.GenerateSign(sn, secret, timestamp)
+	assert.Equal(t, sign, sign2)
+
+	// 验证不同输入生成不同签名
+	sign3 := utils.GenerateSign(sn, "different_secret", timestamp)
+	assert.NotEqual(t, sign, sign3)
 }
 
 // setupTestEnv 初始化测试环境

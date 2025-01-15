@@ -24,6 +24,13 @@ func SetupRouter(r *gin.Engine) {
 		deviceGroup := v1.Group("/device", middleware.JWTAuth())
 		{
 			deviceGroup.POST("/info", deviceInfoHandler.ReportDeviceInfo)
+
+			// 设备告警相关路由
+			alarmHandler := handler.NewDeviceAlarmHandler()
+			deviceGroup.POST("/alarm", alarmHandler.ReportDeviceAlarm)         // 上报设备告警
+			deviceGroup.GET("/alarms", alarmHandler.GetDeviceAlarms)           // 获取设备告警列表
+			deviceGroup.POST("/alarm/:id/resolve", alarmHandler.ResolveAlarm)  // 处理告警
+			deviceGroup.POST("/alarm/:id/ignore", alarmHandler.IgnoreAlarm)    // 忽略告警
 		}
 	}
 } 

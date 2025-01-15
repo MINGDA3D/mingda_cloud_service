@@ -11,7 +11,7 @@ type Device struct {
 	SN          string    `gorm:"type:varchar(32);uniqueIndex;not null" json:"sn"`           // 设备序列号
 	DeviceModel string    `gorm:"type:varchar(32);not null" json:"model"`                    // 设备型号
 	Name        string    `gorm:"type:varchar(64)" json:"name"`                              // 设备名称
-	Secret      string    `gorm:"type:varchar(64);not null" json:"-"`                        // 设备密钥
+	Secret      string    `gorm:"type:varchar(64);not null" json:"secret"`                        // 设备密钥
 	Status      int       `gorm:"type:tinyint;default:0" json:"status"`                      // 设备状态
 	LastOnline  time.Time `gorm:"type:datetime;not null" json:"last_online"`                 // 最后在线时间
 	FirmwareVer string    `gorm:"type:varchar(32)" json:"firmware_ver"`                      // 固件版本

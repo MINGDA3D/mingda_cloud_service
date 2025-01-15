@@ -72,6 +72,7 @@ func (a *App) registerRoutes() {
 	// 创建处理器
 	authHandler := handler.NewAuthHandler(a.config.Server.JWTSecret, a.config.Server.AESKey)
 	deviceInfoHandler := handler.NewDeviceInfoHandler()
+	deviceStatusHandler := handler.NewDeviceStatusHandler()
 
 	// API v1 路由组
 	v1 := a.engine.Group("/api/v1")
@@ -91,6 +92,7 @@ func (a *App) registerRoutes() {
 			deviceGroup := auth.Group("/device")
 			{
 				deviceGroup.POST("/info", deviceInfoHandler.ReportDeviceInfo)
+				deviceGroup.POST("/status", deviceStatusHandler.ReportDeviceStatus)
 			}
 		}
 	}

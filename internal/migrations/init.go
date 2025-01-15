@@ -10,5 +10,7 @@ func AutoMigrate(db *gorm.DB) error {
 	return db.AutoMigrate(
 		&model.Device{},
 		&model.DeviceToken{},
+		&model.DeviceInfo{},
+		&model.SoftwareVersions{},
 	)
 } 

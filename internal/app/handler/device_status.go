@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"mingda_cloud_service/internal/app/service"
 	"mingda_cloud_service/internal/pkg/response"
+	"mingda_cloud_service/internal/pkg/errors"
 )
 
 // DeviceStatusHandler 设备状态处理器

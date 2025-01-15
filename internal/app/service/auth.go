@@ -89,6 +89,21 @@ func (s *AuthService) AuthenticateDevice(sn, sign string, timestamp int64) (*mdm
 		return nil, errors.New(errors.ErrInvalidSign, "签名验证失败")
 	}
 
+	// 激活设备（如果未激活）
+	if device.Status == 0 {
+		if err := database.DB.Model(&device).Update("status", 1).Error; err != nil {
+			return nil, fmt.Errorf("activate device error: %v", err)
+		}
+		device.Status = 1
+	}
+
+	// 更新最后在线时间
+	now := time.Now()
+	if err := database.DB.Model(&device).Update("last_online", now).Error; err != nil {
+		return nil, fmt.Errorf("update last_online error: %v", err)
+	}
+	device.LastOnline = now
+
 	return &device, nil
 }
 
@@ -138,10 +153,23 @@ func (s *AuthService) ValidateToken(tokenString string) (*mdmodel.Device, error)
 			return nil, errors.New(errors.ErrDeviceNotFound, "设备不存在")
 		}
 
+		// 检查设备状态
+		if err := s.checkDeviceStatus(&device); err != nil {
+			return nil, err
+		}
+
 		return &device, nil
 	}
 
 	return nil, errors.New(errors.ErrUnauthorized, "无效的访问令牌")
+}
+
+// checkDeviceStatus 检查设备状态
+func (s *AuthService) checkDeviceStatus(device *mdmodel.Device) error {
+	if device.Status != 1 {
+		return errors.New(errors.ErrUnauthorized, "device is not activated")
+	}
+	return nil
 }
 
 // RefreshToken 刷新访问令牌
@@ -164,8 +192,8 @@ func (s *AuthService) RefreshToken(oldToken string) (string, error) {
 	}
 
 	// 检查设备状态
-	if device.Status != 1 {
-		return "", errors.New(errors.ErrUnauthorized, "device is disabled")
+	if err := s.checkDeviceStatus(&device); err != nil {
+		return "", err
 	}
 
 	// 生成新token

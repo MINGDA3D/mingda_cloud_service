@@ -3,8 +3,9 @@
 # 服务器地址
 BASE_URL="http://localhost:8080/api/v1"
 
-# 测试设备信息
-DEVICE_SN="M1P2004A1100001"
+# 生成唯一的设备SN
+TIMESTAMP_SUFFIX=$(date +%H%M%S)
+DEVICE_SN="M1P2004A1${TIMESTAMP_SUFFIX}"
 DEVICE_MODEL="MD-400D"
 TIMESTAMP=$(date +%s)
 

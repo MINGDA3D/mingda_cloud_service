@@ -71,6 +71,7 @@ func (a *App) registerRoutes() {
 
 	// 创建处理器
 	authHandler := handler.NewAuthHandler(a.config.Server.JWTSecret, a.config.Server.AESKey)
+	deviceInfoHandler := handler.NewDeviceInfoHandler()
 
 	// API v1 路由组
 	v1 := a.engine.Group("/api/v1")
@@ -86,7 +87,11 @@ func (a *App) registerRoutes() {
 		// 需要认证的接口
 		auth := v1.Group("/", middleware.AuthRequired())
 		{
-			// TODO: 添加需要认证的路由
+			// 设备信息相关路由
+			deviceGroup := auth.Group("/device")
+			{
+				deviceGroup.POST("/info", deviceInfoHandler.ReportDeviceInfo)
+			}
 		}
 	}
 } 

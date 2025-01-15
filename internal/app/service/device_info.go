@@ -62,7 +62,7 @@ func (s *DeviceInfoService) ReportDeviceInfo(req *DeviceInfoRequest) error {
 		return errors.NewWithError(errors.ErrDatabase, err)
 	}
 
-	// 2. 记录软件版本信息
+	// 2. 检查并更新软件版本信息
 	softwareVersions := &model.SoftwareVersions{
 		DeviceSN:            req.DeviceInfo.DeviceSN,
 		KlipperVersion:      req.SoftwareVersions.Klipper,
@@ -76,9 +76,49 @@ func (s *DeviceInfoService) ReportDeviceInfo(req *DeviceInfoRequest) error {
 		ReportTime:         time.Now(),
 	}
 
-	if err := tx.Create(softwareVersions).Error; err != nil {
-		tx.Rollback()
-		return errors.NewWithError(errors.ErrDatabase, err)
+	// 查询是否存在记录
+	var existingVersions model.SoftwareVersions
+	err := tx.Where("device_sn = ?", softwareVersions.DeviceSN).First(&existingVersions).Error
+	if err != nil {
+		if database.DB.Error.Error() == "record not found" {
+			// 不存在记录，直接插入
+			if err := tx.Create(softwareVersions).Error; err != nil {
+				tx.Rollback()
+				return errors.NewWithError(errors.ErrDatabase, err)
+			}
+		} else {
+			// 其他数据库错误
+			tx.Rollback()
+			return errors.NewWithError(errors.ErrDatabase, err)
+		}
+	} else {
+		// 存在记录，检查版本是否有变化
+		if existingVersions.KlipperVersion != softwareVersions.KlipperVersion ||
+			existingVersions.KlipperScreenVersion != softwareVersions.KlipperScreenVersion ||
+			existingVersions.MoonrakerVersion != softwareVersions.MoonrakerVersion ||
+			existingVersions.MainsailVersion != softwareVersions.MainsailVersion ||
+			existingVersions.CrowsnestVersion != softwareVersions.CrowsnestVersion ||
+			existingVersions.MainboardFirmware != softwareVersions.MainboardFirmware ||
+			existingVersions.PrintheadFirmware != softwareVersions.PrintheadFirmware ||
+			existingVersions.LevelingFirmware != softwareVersions.LevelingFirmware {
+			// 版本有变化，更新记录
+			if err := tx.Model(&model.SoftwareVersions{}).
+				Where("device_sn = ?", softwareVersions.DeviceSN).
+				Updates(map[string]interface{}{
+					"klipper_version":       softwareVersions.KlipperVersion,
+					"klipper_screen_version": softwareVersions.KlipperScreenVersion,
+					"moonraker_version":     softwareVersions.MoonrakerVersion,
+					"mainsail_version":      softwareVersions.MainsailVersion,
+					"crowsnest_version":     softwareVersions.CrowsnestVersion,
+					"mainboard_firmware":    softwareVersions.MainboardFirmware,
+					"printhead_firmware":    softwareVersions.PrintheadFirmware,
+					"leveling_firmware":     softwareVersions.LevelingFirmware,
+					"report_time":          softwareVersions.ReportTime,
+				}).Error; err != nil {
+				tx.Rollback()
+				return errors.NewWithError(errors.ErrDatabase, err)
+			}
+		}
 	}
 
 	// 提交事务

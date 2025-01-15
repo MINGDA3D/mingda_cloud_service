@@ -5,8 +5,8 @@ import (
 	"mingda_cloud_service/internal/app/service"
 	"mingda_cloud_service/internal/pkg/response"
 	"mingda_cloud_service/internal/pkg/validator"
+	"mingda_cloud_service/internal/pkg/errors"
 	"strings"
-	"errors"
 )
 
 type AuthHandler struct {

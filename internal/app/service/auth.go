@@ -92,31 +92,24 @@ func (s *AuthService) AuthenticateDevice(sn, sign string, timestamp int64) (*mdm
 
 // GenerateToken 生成访问令牌
 func (s *AuthService) GenerateToken(device *mdmodel.Device) (string, error) {
-	// 创建JWT Claims
-	claims := jwt.MapClaims{
-		"device_id": device.ID,
-		"sn":        device.SN,
-		"exp":       time.Now().Add(24 * time.Hour).Unix(), // 24小时有效期
-	}
-
-	// 创建token
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString([]byte(s.jwtSecret))
+	// 生成JWT token
+	token, err := utils.GenerateToken(device, s.jwtSecret, 24*time.Hour) // token有效期24小时
 	if err != nil {
-		return "", fmt.Errorf("generate token error: %v", err)
+		return "", err
 	}
 
 	// 保存token记录
-	deviceToken := mdmodel.DeviceToken{
+	deviceToken := &mdmodel.DeviceToken{
 		DeviceID: device.ID,
-		Token:    tokenString,
+		Token:    token,
 		ExpireAt: time.Now().Add(24 * time.Hour),
 	}
-	if err := database.DB.Create(&deviceToken).Error; err != nil {
-		return "", fmt.Errorf("save token error: %v", err)
+
+	if err := database.DB.Create(deviceToken).Error; err != nil {
+		return "", err
 	}
 
-	return tokenString, nil
+	return token, nil
 }
 
 // ValidateToken 验证访问令牌

@@ -9,11 +9,43 @@ import (
 )
 
 // DeviceStatusService 设备状态服务
-type DeviceStatusService struct{}
+type DeviceStatusService struct {
+	offlineCheckTicker *time.Ticker
+	stopChan          chan struct{}
+}
 
 // NewDeviceStatusService 创建设备状态服务实例
 func NewDeviceStatusService() *DeviceStatusService {
-	return &DeviceStatusService{}
+	service := &DeviceStatusService{
+		offlineCheckTicker: time.NewTicker(1 * time.Minute), // 每分钟检查一次
+		stopChan:          make(chan struct{}),
+	}
+	
+	// 启动离线检测任务
+	go service.startOfflineCheck()
+	
+	return service
+}
+
+// startOfflineCheck 启动离线检测任务
+func (s *DeviceStatusService) startOfflineCheck() {
+	for {
+		select {
+		case <-s.offlineCheckTicker.C:
+			if err := s.CheckDeviceOnlineStatus(); err != nil {
+				// TODO: 添加日志记录
+				continue
+			}
+		case <-s.stopChan:
+			s.offlineCheckTicker.Stop()
+			return
+		}
+	}
+}
+
+// Stop 停止服务
+func (s *DeviceStatusService) Stop() {
+	close(s.stopChan)
 }
 
 // DeviceStatusRequest 设备状态上报请求
@@ -90,7 +122,7 @@ func (s *DeviceStatusService) ReportDeviceStatus(tokenDeviceSN string, req *Devi
 		if err := tx.Model(&online).Updates(map[string]interface{}{
 			"is_online":        true,
 			"last_report_time": now,
-			"offline_time":     gorm.Expr("NULL"),
+			"offline_time":     gorm.Expr("NULL"), // 设备上线时，清除离线时间
 			"update_time":      now,
 		}).Error; err != nil {
 			tx.Rollback()
@@ -110,14 +142,15 @@ func (s *DeviceStatusService) ReportDeviceStatus(tokenDeviceSN string, req *Devi
 func (s *DeviceStatusService) CheckDeviceOnlineStatus() error {
 	// 获取当前时间
 	now := time.Now()
-	offlineThreshold := now.Add(-10 * time.Minute)
+	offlineThreshold := now.Add(-10 * time.Minute) // 10分钟未上报则判定为离线
 
 	// 更新超过10分钟未上报的设备为离线状态
 	if err := database.DB.Model(&model.DeviceOnline{}).
 		Where("is_online = ? AND last_report_time < ?", true, offlineThreshold).
 		Updates(map[string]interface{}{
 			"is_online":    false,
-			"offline_time": now,
+			"offline_time": now, // 设置离线时间为当前时间
+			"update_time": now,
 		}).Error; err != nil {
 		return errors.NewWithError(errors.ErrDatabase, err)
 	}

@@ -8,6 +8,7 @@ import (
     "github.com/gin-gonic/gin"
     "gorm.io/gorm"
     "mingda_cloud_service/internal/pkg/config"
+	"mingda_cloud_service/internal/pkg/constants"
 )
 
 // PrintImageHandler 打印图片处理器

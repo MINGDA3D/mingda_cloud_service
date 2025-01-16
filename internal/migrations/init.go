@@ -14,5 +14,6 @@ func AutoMigrate(db *gorm.DB) error {
 		&model.SoftwareVersions{},
 		&model.DeviceStatus{},
 		&model.DeviceOnline{},
+		&model.DeviceAlarm{},
 	)
 } 

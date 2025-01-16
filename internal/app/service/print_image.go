@@ -2,6 +2,7 @@ package service
 
 import (
     "fmt"
+    "io"
     "mime/multipart"
     "os"
     "path/filepath"
@@ -49,7 +50,19 @@ func (s *PrintImageService) UploadPrintImage(file *multipart.FileHeader, deviceS
     filepath := filepath.Join(uploadDir, filename)
 
     // 保存文件
-    if err := os.WriteFile(filepath, file.Bytes(), 0644); err != nil {
+    src, err := file.Open()
+    if err != nil {
+        return errors.New(errors.ErrSystem, fmt.Sprintf("打开上传文件失败: %v", err))
+    }
+    defer src.Close()
+
+    dst, err := os.Create(filepath)
+    if err != nil {
+        return errors.New(errors.ErrSystem, fmt.Sprintf("创建目标文件失败: %v", err))
+    }
+    defer dst.Close()
+
+    if _, err = io.Copy(dst, src); err != nil {
         return errors.New(errors.ErrSystem, fmt.Sprintf("保存文件失败: %v", err))
     }
 

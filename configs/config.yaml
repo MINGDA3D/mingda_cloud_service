@@ -3,6 +3,7 @@ server:
   mode: debug  # debug/release
   jwt_secret: "mingda3D250113PrintingCloudService2024"
   aes_key: "MingDa3DPrinting2024CloudServiceKey32"
+  base_url: "http://localhost:8080"
 
 database:
   host: localhost

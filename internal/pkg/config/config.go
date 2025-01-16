@@ -13,6 +13,7 @@ type Config struct {
 	Redis    RedisConfig    `yaml:"redis"`
 	RabbitMQ RabbitMQConfig `yaml:"rabbitmq"`
 	Log      LogConfig      `yaml:"log"`
+	AI       AIConfig       `yaml:"ai"`
 }
 
 type ServerConfig struct {
@@ -20,6 +21,11 @@ type ServerConfig struct {
 	Mode      string `yaml:"mode"`
 	JWTSecret string `yaml:"jwt_secret"`
 	AESKey    string `yaml:"aes_key"`
+	BaseURL   string `yaml:"base_url"`
+}
+
+type AIConfig struct {
+	BaseURL string `yaml:"base_url"`
 }
 
 type DatabaseConfig struct {

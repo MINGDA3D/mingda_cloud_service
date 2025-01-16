@@ -78,8 +78,8 @@ func (a *App) registerRoutes() {
 	deviceStatusHandler := handler.NewDeviceStatusHandler()
 	deviceAlarmHandler := handler.NewDeviceAlarmHandler()
 	printTaskHandler := handler.NewPrintTaskHandler()
-	printImageHandler := handler.NewPrintImageHandler("uploads/images", "http://localhost:8080/images")
-	aiCallbackHandler := handler.NewAICallbackHandler(a.config.Database)
+	printImageHandler := handler.NewPrintImageHandler(database.DB, a.config)
+	aiCallbackHandler := handler.NewAICallbackHandler(database.DB)
 
 	// API v1 路由组
 	v1 := a.engine.Group("/api/v1")

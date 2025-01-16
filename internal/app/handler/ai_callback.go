@@ -5,6 +5,7 @@ import (
     "mingda_cloud_service/internal/pkg/errors"
     "mingda_cloud_service/internal/pkg/response"
     "github.com/gin-gonic/gin"
+    "gorm.io/gorm"
 )
 
 // AICallbackHandler AI回调处理器

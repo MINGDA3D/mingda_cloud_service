@@ -14,6 +14,7 @@ const (
 	ErrTooManyReq      ErrorCode = 1006 // 请求过于频繁
 	ErrTimeout         ErrorCode = 1007 // 请求超时
 	ErrServiceBusy     ErrorCode = 1008 // 服务繁忙
+	ErrSystem          ErrorCode = 1009 // 系统错误
 
 	// 业务错误码 (2000-2999)
 	// 设备相关 (2000-2099)

@@ -78,8 +78,8 @@ echo -e "请求URL: ${BASE_URL}/ai/callback"
 callback_data='{
     "task_id": "'${TASK_ID}'",
     "status": "success",
-    "predict_model": "yolov8",
     "result": {
+        "predict_model": "spaghetti_v1.0",
         "has_defect": true,
         "defect_type": "stringing",
         "confidence": 0.95

@@ -22,17 +22,17 @@ func NewAICallbackHandler(db *gorm.DB) *AICallbackHandler {
 
 // CallbackRequest AI回调请求
 type CallbackRequest struct {
-    TaskID       string         `json:"task_id" binding:"required"`
-    Status       string         `json:"status" binding:"required"`
-    Result       *PredictResult `json:"result,omitempty"`
-    PredictModel string         `json:"predict_model" binding:"required"`
+    TaskID string         `json:"task_id" binding:"required"`
+    Status string         `json:"status" binding:"required"`
+    Result *PredictResult `json:"result,omitempty"`
 }
 
 // PredictResult AI预测结果
 type PredictResult struct {
-    HasDefect  bool    `json:"has_defect"`
-    DefectType string  `json:"defect_type"`
-    Confidence float64 `json:"confidence"`
+    PredictModel string  `json:"predict_model" binding:"required"`
+    HasDefect    bool    `json:"has_defect"`
+    DefectType   string  `json:"defect_type"`
+    Confidence   float64 `json:"confidence"`
 }
 
 // HandleCallback 处理AI回调
@@ -65,8 +65,7 @@ func (h *AICallbackHandler) HandleCallback(c *gin.Context) {
 
     // 更新检测结果
     updates := map[string]interface{}{
-        "status":        model.StatusChecked,
-        "predict_model": req.PredictModel,
+        "status": model.StatusChecked,
     }
 
     if req.Status == "success" && req.Result != nil {
@@ -74,6 +73,7 @@ func (h *AICallbackHandler) HandleCallback(c *gin.Context) {
         updates["has_defect"] = &hasDefect
         updates["defect_type"] = req.Result.DefectType
         updates["confidence"] = req.Result.Confidence
+        updates["predict_model"] = req.Result.PredictModel
     }
 
     if err := tx.Model(&image).Updates(updates).Error; err != nil {

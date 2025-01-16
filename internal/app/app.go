@@ -78,6 +78,8 @@ func (a *App) registerRoutes() {
 	deviceStatusHandler := handler.NewDeviceStatusHandler()
 	deviceAlarmHandler := handler.NewDeviceAlarmHandler()
 	printTaskHandler := handler.NewPrintTaskHandler()
+	printImageHandler := handler.NewPrintImageHandler("uploads/images", "http://localhost:8080/images")
+	aiCallbackHandler := handler.NewAICallbackHandler(a.config.Database)
 
 	// API v1 路由组
 	v1 := a.engine.Group("/api/v1")
@@ -89,6 +91,9 @@ func (a *App) registerRoutes() {
 		v1.POST("/devices/register", authHandler.Register)
 		v1.POST("/devices/auth", authHandler.Authenticate)
 		v1.POST("/devices/refresh", authHandler.RefreshToken)
+
+		// AI回调接口 - 不需要认证
+		v1.POST("/ai/callback", aiCallbackHandler.HandleCallback)
 
 		// 需要认证的接口
 		auth := v1.Group("/", middleware.AuthRequired())
@@ -108,9 +113,8 @@ func (a *App) registerRoutes() {
 				deviceGroup.GET("/print/tasks", printTaskHandler.GetDevicePrintTasks)
 				deviceGroup.GET("/print/task/:task_id/history", printTaskHandler.GetTaskHistory)
 				// 打印图片相关路由
-				imageHandler := handler.NewPrintImageHandler("uploads/images", "http://localhost:8080/images")
-				deviceGroup.POST("/print/image", imageHandler.UploadPrintImage)
-				deviceGroup.GET("/print/images", imageHandler.GetPrintImages)
+				deviceGroup.POST("/print/image", printImageHandler.UploadPrintImage)
+				deviceGroup.GET("/print/images", printImageHandler.GetPrintImages)
 			}
 		}
 	}

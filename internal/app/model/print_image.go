@@ -4,22 +4,29 @@ import (
     "time"
 )
 
-// PrintImage 打印图片记录
+// PrintImage 打印图片模型
 type PrintImage struct {
-    ID          int64     `gorm:"primaryKey;column:id" json:"id"`
-    DeviceSN    string    `gorm:"column:device_sn;type:varchar(64);index" json:"device_sn"`         // 设备SN
-    TaskID      string    `gorm:"column:task_id;type:varchar(64);index" json:"task_id"`             // 打印任务ID
-    ImagePath   string    `gorm:"column:image_path;type:varchar(255)" json:"image_path"`            // 图片存储路径
-    ImageURL    string    `gorm:"column:image_url;type:varchar(255)" json:"image_url"`              // 图片访问URL
-    Status      int       `gorm:"column:status;type:tinyint" json:"status"`                         // 检测状态：0-未检测 1-检测中 2-检测完成
-    HasDefect   bool      `gorm:"column:has_defect;type:tinyint" json:"has_defect"`                // 是否存在缺陷
-    DefectType  string    `gorm:"column:defect_type;type:varchar(64)" json:"defect_type"`          // 缺陷类型
-    Confidence  float64   `gorm:"column:confidence;type:decimal(5,2)" json:"confidence"`            // 检测置信度
-    CreateTime  time.Time `gorm:"column:create_time;autoCreateTime" json:"create_time"`             // 创建时间
-    UpdateTime  time.Time `gorm:"column:update_time;autoUpdateTime" json:"update_time"`             // 更新时间
+    ID          uint      `gorm:"primarykey"`
+    TaskID      string    `gorm:"type:varchar(32);not null;comment:打印任务ID"`
+    DeviceSN    string    `gorm:"type:varchar(32);not null;comment:设备序列号"`
+    ImagePath   string    `gorm:"type:varchar(255);not null;comment:图片存储路径"`
+    ImageURL    string    `gorm:"type:varchar(255);not null;comment:图片访问URL"`
+    Status      int       `gorm:"type:tinyint;not null;default:0;comment:检测状态(0-未检测,1-检测中,2-检测完成)"`
+    HasDefect   *bool     `gorm:"comment:是否存在缺陷"`
+    DefectType  string    `gorm:"type:varchar(32);comment:缺陷类型"`
+    Confidence  float64   `gorm:"type:decimal(5,4);comment:检测置信度"`
+    CreateTime  time.Time `gorm:"type:timestamp;not null;default:CURRENT_TIMESTAMP;comment:创建时间"`
+    UpdateTime  time.Time `gorm:"type:timestamp;not null;default:CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;comment:更新时间"`
 }
 
 // TableName 表名
-func (PrintImage) TableName() string {
+func (p *PrintImage) TableName() string {
     return "md_print_images"
-} 
+}
+
+// 检测状态常量
+const (
+    StatusPending  = 0 // 未检测
+    StatusChecking = 1 // 检测中
+    StatusChecked  = 2 // 检测完成
+) 

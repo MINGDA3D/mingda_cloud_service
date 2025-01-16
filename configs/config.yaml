@@ -13,6 +13,7 @@ database:
   max_idle_conns: 10
   max_open_conns: 100
   conn_max_lifetime: 3600
+  base_url: "http://localhost:8080"
 
 redis:
   host: localhost
@@ -35,3 +36,6 @@ log:
   max_age: 7       # days
   max_backups: 30
   compress: true
+
+ai:
+  base_url: "http://localhost:5000"

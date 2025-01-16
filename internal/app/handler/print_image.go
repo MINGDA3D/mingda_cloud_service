@@ -4,7 +4,6 @@ import (
     "mingda_cloud_service/internal/app/service"
     "mingda_cloud_service/internal/pkg/errors"
     "mingda_cloud_service/internal/pkg/response"
-    "mingda_cloud_service/internal/pkg/middleware"
     "github.com/gin-gonic/gin"
     "gorm.io/gorm"
     "mingda_cloud_service/internal/pkg/config"
@@ -26,7 +25,7 @@ func NewPrintImageHandler(db *gorm.DB, cfg *config.Config) *PrintImageHandler {
 // UploadPrintImage 上传打印图片
 func (h *PrintImageHandler) UploadPrintImage(c *gin.Context) {
     // 从上下文获取设备SN
-    deviceSN := c.GetString(middleware.ContextDeviceSN)
+    deviceSN := c.GetString(constants.ContextDeviceSN)
     if deviceSN == "" {
         response.Error(c, errors.New(errors.ErrInvalidParams, "设备SN不能为空"))
         return
@@ -58,7 +57,7 @@ func (h *PrintImageHandler) UploadPrintImage(c *gin.Context) {
 // GetPrintImages 获取打印图片列表
 func (h *PrintImageHandler) GetPrintImages(c *gin.Context) {
     // 从上下文获取设备SN
-    deviceSN := c.GetString(middleware.ContextDeviceSN)
+    deviceSN := c.GetString(constants.ContextDeviceSN)
     if deviceSN == "" {
         response.Error(c, errors.New(errors.ErrInvalidParams, "设备SN不能为空"))
         return

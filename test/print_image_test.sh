@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 设置服务地址
-BASE_URL="http://localhost:8080/api/v1"
+BASE_URL="http://61.144.188.241:8081/api/v1"
 
 # 颜色输出
 RED='\033[0;31m'
@@ -45,7 +45,7 @@ echo -e "\n响应数据:"
 echo $response | jq '.'
 
 # 检查上传是否成功
-if [ "$(echo $response | jq -r '.code')" != "0" ]; then
+if [ "$(echo $response | jq -r '.code')" != "200" ]; then
     echo -e "${RED}图片上传失败${NC}"
     exit 1
 fi
@@ -62,7 +62,9 @@ response=$(curl -s -X GET "${BASE_URL}/device/print/images?task_id=${TASK_ID}" \
 echo -e "\n响应数据:"
 echo $response | jq '.'
 
-image_url=$(echo $response | jq -r '.data[0].image_url')
+# 提取图片URL并替换域名
+image_url=$(echo $response | jq -r '.data[0].ImageURL')
+image_url=${image_url/localhost/61.144.188.241}
 echo -e "图片URL: ${image_url}"
 
 # 等待5秒
@@ -94,7 +96,7 @@ echo -e "\n响应数据:"
 echo $response | jq '.'
 
 # 检查回调是否成功
-if [ "$(echo $response | jq -r '.code')" != "0" ]; then
+if [ "$(echo $response | jq -r '.code')" != "200" ]; then
     echo -e "${RED}AI回调失败${NC}"
     exit 1
 fi
@@ -112,7 +114,7 @@ echo -e "\n响应数据:"
 echo $response | jq '.'
 
 # 验证检测状态
-status=$(echo $response | jq -r '.data[0].status')
+status=$(echo $response | jq -r '.data[0].Status')
 if [ "$status" == "2" ]; then
     echo -e "${GREEN}测试完成: 图片已完成AI检测${NC}"
 else
@@ -121,6 +123,6 @@ fi
 
 # 显示检测结果
 echo -e "\n${YELLOW}检测结果:${NC}"
-echo -e "是否存在缺陷: $(echo $response | jq -r '.data[0].has_defect')"
-echo -e "缺陷类型: $(echo $response | jq -r '.data[0].defect_type')"
-echo -e "置信度: $(echo $response | jq -r '.data[0].confidence')" 
+echo -e "是否存在缺陷: $(echo $response | jq -r '.data[0].HasDefect')"
+echo -e "缺陷类型: $(echo $response | jq -r '.data[0].DefectType')"
+echo -e "置信度: $(echo $response | jq -r '.data[0].Confidence')"

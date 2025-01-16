@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 	"mingda_cloud_service/internal/app/service"
+	"mingda_cloud_service/internal/pkg/constants"
 	"mingda_cloud_service/internal/pkg/response"
 	"mingda_cloud_service/internal/pkg/errors"
 )
@@ -28,7 +29,7 @@ func (h *DeviceStatusHandler) ReportDeviceStatus(c *gin.Context) {
 	}
 
 	// 从上下文获取设备SN
-	deviceSN := c.GetString("device_sn")
+	deviceSN := c.GetString(constants.ContextDeviceSN)
 	if deviceSN == "" {
 		response.Error(c, errors.New(errors.ErrUnauthorized, "未授权的访问"))
 		return

@@ -2,7 +2,6 @@ package model
 
 import (
 	"time"
-	"gorm.io/gorm"
 )
 
 // PrintTask 打印任务模型

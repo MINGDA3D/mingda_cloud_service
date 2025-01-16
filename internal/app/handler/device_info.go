@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 	"mingda_cloud_service/internal/app/service"
+	"mingda_cloud_service/internal/pkg/constants"
 	"mingda_cloud_service/internal/pkg/response"
 )
 
@@ -27,7 +28,7 @@ func (h *DeviceInfoHandler) ReportDeviceInfo(c *gin.Context) {
 	}
 
 	// 从上下文获取设备SN并验证
-	deviceSN := c.GetString("device_sn")
+	deviceSN := c.GetString(constants.ContextDeviceSN)
 	if deviceSN != req.DeviceInfo.DeviceSN {
 		response.ErrorWithMsg(c, "设备SN不匹配")
 		return

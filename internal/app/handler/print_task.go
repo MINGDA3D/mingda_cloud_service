@@ -5,6 +5,7 @@ import (
 	"mingda_cloud_service/internal/app/service"
 	"mingda_cloud_service/internal/pkg/constants"
 	"mingda_cloud_service/internal/pkg/response"
+	"mingda_cloud_service/internal/pkg/errors"	
 )
 
 // PrintTaskHandler 打印任务处理器
@@ -24,14 +25,14 @@ func (h *PrintTaskHandler) ReportPrintStatus(c *gin.Context) {
 	// 1. 获取设备SN
 	deviceSN := c.GetString(constants.ContextDeviceSN)
 	if deviceSN == "" {
-		response.Error(c, response.ErrUnauthorized, "未获取到设备SN")
+		response.Error(c, errors.New(errors.ErrUnauthorized, "未获取到设备SN"))
 		return
 	}
 
 	// 2. 绑定请求参数
 	var req service.PrintTaskRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, response.ErrInvalidParams, "参数绑定失败")
+		response.Error(c, errors.New(errors.ErrInvalidParams, "参数绑定失败"))
 		return
 	}
 
@@ -49,7 +50,7 @@ func (h *PrintTaskHandler) GetDevicePrintTasks(c *gin.Context) {
 	// 1. 获取设备SN
 	deviceSN := c.GetString(constants.ContextDeviceSN)
 	if deviceSN == "" {
-		response.Error(c, response.ErrUnauthorized, "未获取到设备SN")
+		response.Error(c, errors.New(errors.ErrUnauthorized, "未获取到设备SN"))
 		return
 	}
 
@@ -71,7 +72,7 @@ func (h *PrintTaskHandler) GetTaskHistory(c *gin.Context) {
 	// 1. 获取任务ID
 	taskID := c.Param("task_id")
 	if taskID == "" {
-		response.Error(c, response.ErrInvalidParams, "未提供任务ID")
+		response.Error(c, errors.New(errors.ErrInvalidParams, "未提供任务ID"))
 		return
 	}
 

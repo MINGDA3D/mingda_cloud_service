@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"github.com/gin-gonic/gin"
 	"mingda_cloud_service/internal/app/service"
+	"mingda_cloud_service/internal/pkg/constants"
 	"mingda_cloud_service/internal/pkg/response"
 	"mingda_cloud_service/internal/pkg/errors"
 )
@@ -23,7 +24,7 @@ func NewDeviceAlarmHandler() *DeviceAlarmHandler {
 // ReportDeviceAlarm 上报设备告警
 func (h *DeviceAlarmHandler) ReportDeviceAlarm(c *gin.Context) {
 	// 从上下文获取设备SN
-	deviceSN := c.GetString("device_sn")
+	deviceSN := c.GetString(constants.ContextDeviceSN)
 	if deviceSN == "" {
 		response.Error(c, errors.New(errors.ErrUnauthorized, "未授权的访问"))
 		return
@@ -91,7 +92,7 @@ func (h *DeviceAlarmHandler) IgnoreAlarm(c *gin.Context) {
 // GetDeviceAlarms 获取设备告警列表
 func (h *DeviceAlarmHandler) GetDeviceAlarms(c *gin.Context) {
 	// 从上下文获取设备SN
-	deviceSN := c.GetString("device_sn")
+	deviceSN := c.GetString(constants.ContextDeviceSN)
 	if deviceSN == "" {
 		response.Error(c, errors.New(errors.ErrUnauthorized, "未授权的访问"))
 		return

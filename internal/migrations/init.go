@@ -15,5 +15,7 @@ func AutoMigrate(db *gorm.DB) error {
 		&model.DeviceStatus{},
 		&model.DeviceOnline{},
 		&model.DeviceAlarm{},
+		&model.PrintTask{},
+		&model.PrintTaskHistory{},
 	)
 } 

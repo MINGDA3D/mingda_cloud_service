@@ -74,6 +74,7 @@ func (a *App) registerRoutes() {
 	deviceInfoHandler := handler.NewDeviceInfoHandler()
 	deviceStatusHandler := handler.NewDeviceStatusHandler()
 	deviceAlarmHandler := handler.NewDeviceAlarmHandler()
+	printTaskHandler := handler.NewPrintTaskHandler()
 
 	// API v1 路由组
 	v1 := a.engine.Group("/api/v1")
@@ -94,11 +95,15 @@ func (a *App) registerRoutes() {
 			{
 				deviceGroup.POST("/info", deviceInfoHandler.ReportDeviceInfo)
 				deviceGroup.POST("/status", deviceStatusHandler.ReportDeviceStatus)
-				// 添加设备告警相关路由
+				// 设备告警相关路由
 				deviceGroup.POST("/alarm", deviceAlarmHandler.ReportDeviceAlarm)
 				deviceGroup.GET("/alarms", deviceAlarmHandler.GetDeviceAlarms)
 				deviceGroup.POST("/alarm/:id/resolve", deviceAlarmHandler.ResolveAlarm)
 				deviceGroup.POST("/alarm/:id/ignore", deviceAlarmHandler.IgnoreAlarm)
+				// 打印任务相关路由
+				deviceGroup.POST("/print/status", printTaskHandler.ReportPrintStatus)
+				deviceGroup.GET("/print/tasks", printTaskHandler.GetDevicePrintTasks)
+				deviceGroup.GET("/print/task/:task_id/history", printTaskHandler.GetTaskHistory)
 			}
 		}
 	}

@@ -17,6 +17,7 @@ if [ -z "$1" ]; then
 fi
 
 TOKEN="$1"
+TASK_ID=""
 
 # 上报打印任务状态
 report_print_status() {
@@ -27,26 +28,29 @@ report_print_status() {
     echo -e "请求URL: ${BASE_URL}/device/print/status"
     echo -e "Authorization: Bearer ${TOKEN}"
     
+    START_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    TASK_ID="PT$(date +%Y%m%d%H%M%S)"
+    
     echo -e "\n请求数据:"
     echo "{
-        \"task_id\": \"PT$(date +%Y%m%d%H%M%S)\",
+        \"task_id\": \"${TASK_ID}\",
         \"file_name\": \"test_model.gcode\",
         \"status\": \"printing\",
-        \"start_time\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\",
+        \"start_time\": \"${START_TIME}\",
         \"progress\": 0,
         \"duration\": 0,
         \"filament_used\": 0,
         \"layers_completed\": 0
     }" | jq '.'
     
-    response=$(curl -s -X POST "${BASE_URL}/device/print/status" \
+    response=$(curl -v -s -X POST "${BASE_URL}/device/print/status" \
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer ${TOKEN}" \
         -d "{
-            \"task_id\": \"PT$(date +%Y%m%d%H%M%S)\",
+            \"task_id\": \"${TASK_ID}\",
             \"file_name\": \"test_model.gcode\",
             \"status\": \"printing\",
-            \"start_time\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\",
+            \"start_time\": \"${START_TIME}\",
             \"progress\": 0,
             \"duration\": 0,
             \"filament_used\": 0,
@@ -55,14 +59,11 @@ report_print_status() {
     
     echo -e "\n响应: $response"
     
-    # 保存任务ID用于后续测试
-    TASK_ID=$(echo $response | jq -r '.data.task_id')
-    
     # 1.2 更新打印进度
     echo -e "\n${YELLOW}1.2 更新打印进度${NC}"
     echo -e "请求数据:"
     echo "{
-        \"task_id\": \"$TASK_ID\",
+        \"task_id\": \"${TASK_ID}\",
         \"file_name\": \"test_model.gcode\",
         \"status\": \"printing\",
         \"progress\": 45.5,
@@ -71,11 +72,11 @@ report_print_status() {
         \"layers_completed\": 150
     }" | jq '.'
     
-    response=$(curl -s -X POST "${BASE_URL}/device/print/status" \
+    response=$(curl -v -s -X POST "${BASE_URL}/device/print/status" \
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer ${TOKEN}" \
         -d "{
-            \"task_id\": \"$TASK_ID\",
+            \"task_id\": \"${TASK_ID}\",
             \"file_name\": \"test_model.gcode\",
             \"status\": \"printing\",
             \"progress\": 45.5,
@@ -88,26 +89,28 @@ report_print_status() {
     
     # 1.3 完成打印
     echo -e "\n${YELLOW}1.3 上报打印完成状态${NC}"
+    END_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
     echo -e "请求数据:"
     echo "{
-        \"task_id\": \"$TASK_ID\",
+        \"task_id\": \"${TASK_ID}\",
         \"file_name\": \"test_model.gcode\",
         \"status\": \"completed\",
-        \"end_time\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\",
+        \"end_time\": \"${END_TIME}\",
         \"progress\": 100,
         \"duration\": 3600,
         \"filament_used\": 2500.8,
         \"layers_completed\": 300
     }" | jq '.'
     
-    response=$(curl -s -X POST "${BASE_URL}/device/print/status" \
+    response=$(curl -v -s -X POST "${BASE_URL}/device/print/status" \
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer ${TOKEN}" \
         -d "{
-            \"task_id\": \"$TASK_ID\",
+            \"task_id\": \"${TASK_ID}\",
             \"file_name\": \"test_model.gcode\",
             \"status\": \"completed\",
-            \"end_time\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\",
+            \"end_time\": \"${END_TIME}\",
             \"progress\": 100,
             \"duration\": 3600,
             \"filament_used\": 2500.8,
@@ -142,10 +145,10 @@ get_print_tasks() {
 
 # 查询任务历史
 get_task_history() {
-    if [ "$TASK_ID" == "" ] || [ "$TASK_ID" == "null" ]; then
+    if [ -z "${TASK_ID}" ]; then
         echo -e "${RED}没有找到可查询的任务${NC}"
         return
-    }
+    fi
     
     echo -e "\n${YELLOW}3. 查询任务历史${NC}"
     echo -e "请求URL: ${BASE_URL}/device/print/task/${TASK_ID}/history"

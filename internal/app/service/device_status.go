@@ -144,15 +144,25 @@ func (s *DeviceStatusService) CheckDeviceOnlineStatus() error {
 	now := time.Now()
 	offlineThreshold := now.Add(-10 * time.Minute) // 10分钟未上报则判定为离线
 
-	// 更新超过10分钟未上报的设备为离线状态
+	// 先查询是否有需要更新的设备
+	var count int64
 	if err := database.DB.Model(&model.DeviceOnline{}).
 		Where("is_online = ? AND last_report_time < ?", true, offlineThreshold).
-		Updates(map[string]interface{}{
-			"is_online":    false,
-			"offline_time": now, // 设置离线时间为当前时间
-			"update_time": now,
-		}).Error; err != nil {
+		Count(&count).Error; err != nil {
 		return errors.NewWithError(errors.ErrDatabase, err)
+	}
+
+	// 只有在有需要更新的设备时才执行更新操作
+	if count > 0 {
+		if err := database.DB.Model(&model.DeviceOnline{}).
+			Where("is_online = ? AND last_report_time < ?", true, offlineThreshold).
+			Updates(map[string]interface{}{
+				"is_online":    false,
+				"offline_time": now,
+				"update_time": now,
+			}).Error; err != nil {
+			return errors.NewWithError(errors.ErrDatabase, err)
+		}
 	}
 
 	return nil

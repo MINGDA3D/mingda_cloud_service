@@ -15,6 +15,7 @@ type PrintImage struct {
     HasDefect   *bool     `gorm:"comment:是否存在缺陷"`
     DefectType  string    `gorm:"type:varchar(32);comment:缺陷类型"`
     Confidence  float64   `gorm:"type:decimal(5,4);comment:检测置信度"`
+    PredictModel string    `gorm:"type:varchar(32);comment:预测模型"`
     CreateTime  time.Time `gorm:"type:timestamp;not null;default:CURRENT_TIMESTAMP;comment:创建时间"`
     UpdateTime  time.Time `gorm:"type:timestamp;not null;default:CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;comment:更新时间"`
 }

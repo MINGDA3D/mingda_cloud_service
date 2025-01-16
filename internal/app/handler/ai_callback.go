@@ -22,9 +22,10 @@ func NewAICallbackHandler(db *gorm.DB) *AICallbackHandler {
 
 // CallbackRequest AI回调请求
 type CallbackRequest struct {
-    TaskID  string         `json:"task_id" binding:"required"`
-    Status  string         `json:"status" binding:"required"`
-    Result  *PredictResult `json:"result,omitempty"`
+    TaskID       string         `json:"task_id" binding:"required"`
+    Status       string         `json:"status" binding:"required"`
+    Result       *PredictResult `json:"result,omitempty"`
+    PredictModel string         `json:"predict_model" binding:"required"`
 }
 
 // PredictResult AI预测结果
@@ -64,7 +65,8 @@ func (h *AICallbackHandler) HandleCallback(c *gin.Context) {
 
     // 更新检测结果
     updates := map[string]interface{}{
-        "status": model.StatusChecked,
+        "status":        model.StatusChecked,
+        "predict_model": req.PredictModel,
     }
 
     if req.Status == "success" && req.Result != nil {

@@ -78,6 +78,7 @@ echo -e "请求URL: ${BASE_URL}/ai/callback"
 callback_data='{
     "task_id": "'${TASK_ID}'",
     "status": "success",
+    "predict_model": "yolov8",
     "result": {
         "has_defect": true,
         "defect_type": "stringing",
@@ -126,3 +127,4 @@ echo -e "\n${YELLOW}检测结果:${NC}"
 echo -e "是否存在缺陷: $(echo $response | jq -r '.data[0].HasDefect')"
 echo -e "缺陷类型: $(echo $response | jq -r '.data[0].DefectType')"
 echo -e "置信度: $(echo $response | jq -r '.data[0].Confidence')"
+echo -e "预测模型: $(echo $response | jq -r '.data[0].PredictModel')"

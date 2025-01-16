@@ -49,6 +49,9 @@ func NewApp(cfg *config.Config) (*App, error) {
 	// 使用日志和恢复中间件
 	engine.Use(gin.Logger(), gin.Recovery())
 
+	// 配置静态文件服务
+	engine.Static("/images", "./uploads/images")
+
 	return &App{
 		config: cfg,
 		engine: engine,
@@ -104,6 +107,10 @@ func (a *App) registerRoutes() {
 				deviceGroup.POST("/print/status", printTaskHandler.ReportPrintStatus)
 				deviceGroup.GET("/print/tasks", printTaskHandler.GetDevicePrintTasks)
 				deviceGroup.GET("/print/task/:task_id/history", printTaskHandler.GetTaskHistory)
+				// 打印图片相关路由
+				imageHandler := handler.NewPrintImageHandler("uploads/images", "http://localhost:8080/images")
+				deviceGroup.POST("/print/image", imageHandler.UploadPrintImage)
+				deviceGroup.GET("/print/images", imageHandler.GetPrintImages)
 			}
 		}
 	}

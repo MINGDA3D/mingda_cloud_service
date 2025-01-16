@@ -73,6 +73,7 @@ func (a *App) registerRoutes() {
 	authHandler := handler.NewAuthHandler(a.config.Server.JWTSecret, a.config.Server.AESKey)
 	deviceInfoHandler := handler.NewDeviceInfoHandler()
 	deviceStatusHandler := handler.NewDeviceStatusHandler()
+	deviceAlarmHandler := handler.NewDeviceAlarmHandler()
 
 	// API v1 路由组
 	v1 := a.engine.Group("/api/v1")
@@ -93,6 +94,11 @@ func (a *App) registerRoutes() {
 			{
 				deviceGroup.POST("/info", deviceInfoHandler.ReportDeviceInfo)
 				deviceGroup.POST("/status", deviceStatusHandler.ReportDeviceStatus)
+				// 添加设备告警相关路由
+				deviceGroup.POST("/alarm", deviceAlarmHandler.ReportDeviceAlarm)
+				deviceGroup.GET("/alarms", deviceAlarmHandler.GetDeviceAlarms)
+				deviceGroup.POST("/alarm/:id/resolve", deviceAlarmHandler.ResolveAlarm)
+				deviceGroup.POST("/alarm/:id/ignore", deviceAlarmHandler.IgnoreAlarm)
 			}
 		}
 	}

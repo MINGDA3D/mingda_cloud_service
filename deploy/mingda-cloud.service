@@ -1,0 +1,16 @@
+[Unit]
+Description=Mingda Cloud Service
+After=network.target
+
+[Service]
+Type=simple
+User=yxs
+WorkingDirectory=/home/yxs/code/mingda_cloud_service
+ExecStart=/home/yxs/code/mingda_cloud_service/mingda_cloud_service
+Restart=always
+RestartSec=5
+StandardOutput=append:/home/yxs/code/mingda_cloud_service/logs/app.log
+StandardError=append:/home/yxs/code/mingda_cloud_service/logs/error.log
+
+[Install]
+WantedBy=multi-user.target 

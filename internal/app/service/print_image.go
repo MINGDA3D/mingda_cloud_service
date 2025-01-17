@@ -38,16 +38,33 @@ func NewPrintImageService(db *gorm.DB, cfg *config.Config) *PrintImageService {
 
 // UploadPrintImage 上传打印图片
 func (s *PrintImageService) UploadPrintImage(file *multipart.FileHeader, deviceSN, taskID string) error {
-    // 创建上传目录
-    uploadDir := filepath.Join("uploads", "images", time.Now().Format("20060102"))
-    if err := os.MkdirAll(uploadDir, 0755); err != nil {
-        return errors.New(errors.ErrSystem, fmt.Sprintf("创建目录失败: %v", err))
+    // 创建基础上传目录
+    baseUploadDir := "uploads"
+    if err := os.MkdirAll(baseUploadDir, 0755); err != nil {
+        return errors.New(errors.ErrSystem, fmt.Sprintf("创建基础上传目录失败: %v", err))
+    }
+
+    // 创建图片目录
+    imagesDir := filepath.Join(baseUploadDir, "images")
+    if err := os.MkdirAll(imagesDir, 0755); err != nil {
+        return errors.New(errors.ErrSystem, fmt.Sprintf("创建图片目录失败: %v", err))
+    }
+
+    // 创建日期目录
+    dateDir := filepath.Join(imagesDir, time.Now().Format("20060102"))
+    if err := os.MkdirAll(dateDir, 0755); err != nil {
+        return errors.New(errors.ErrSystem, fmt.Sprintf("创建日期目录失败: %v", err))
+    }
+
+    // 检查目录权限
+    if err := checkDirPermissions(dateDir); err != nil {
+        return errors.New(errors.ErrSystem, fmt.Sprintf("目录权限检查失败: %v", err))
     }
 
     // 生成文件名
     ext := filepath.Ext(file.Filename)
     filename := fmt.Sprintf("%s_%s%s", taskID, time.Now().Format("150405"), ext)
-    filepath := filepath.Join(uploadDir, filename)
+    filePath := filepath.Join(dateDir, filename)
 
     // 保存文件
     src, err := file.Open()
@@ -56,7 +73,7 @@ func (s *PrintImageService) UploadPrintImage(file *multipart.FileHeader, deviceS
     }
     defer src.Close()
 
-    dst, err := os.Create(filepath)
+    dst, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
     if err != nil {
         return errors.New(errors.ErrSystem, fmt.Sprintf("创建目标文件失败: %v", err))
     }
@@ -84,7 +101,7 @@ func (s *PrintImageService) UploadPrintImage(file *multipart.FileHeader, deviceS
     image := &model.PrintImage{
         TaskID:    taskID,
         DeviceSN:  deviceSN,
-        ImagePath: filepath,
+        ImagePath: filePath,
         ImageURL:  imageURL,
         Status:    model.StatusChecking, // 设置为检测中状态
     }
@@ -109,6 +126,24 @@ func (s *PrintImageService) UploadPrintImage(file *multipart.FileHeader, deviceS
         }
     }()
 
+    return nil
+}
+
+// checkDirPermissions 检查目录权限
+func checkDirPermissions(dir string) error {
+    // 创建测试文件
+    testFile := filepath.Join(dir, ".test_write_permission")
+    f, err := os.OpenFile(testFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+    if err != nil {
+        return fmt.Errorf("无法在目录中创建文件: %v", err)
+    }
+    f.Close()
+    
+    // 清理测试文件
+    if err := os.Remove(testFile); err != nil {
+        return fmt.Errorf("无法删除测试文件: %v", err)
+    }
+    
     return nil
 }
 
